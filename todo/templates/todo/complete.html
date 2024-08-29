@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block header %}{{ super() }}{% endblock %}
+
+{% block content %}
+  <div class="mt-5 mx-5 table-responsive">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th scope="col" style="width: 10%;">ID</th>
+          <th scope="col" style="width: 90%;">Title</th>
+        </tr>
+      </thead>
+      {% for todo in todos %}
+      <!-- コンテンツ入力用 -->
+      <tbody>
+        <tr>
+          <td scope="col" style="width: 10%">{{ todo.id }}</td>
+          <td scope="col" style="width: 90%">{{ todo.title }}</td>
+        </tr>
+        
+      </tbody>
+      {% endfor %}
+    </table>
+
+  </div>
+{% endblock %}
+
