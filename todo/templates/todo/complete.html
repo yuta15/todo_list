@@ -16,7 +16,9 @@
       <tbody>
         <tr>
           <td scope="col" style="width: 10%">{{ todo.id }}</td>
-          <td scope="col" style="width: 90%">{{ todo.title }}</td>
+          <td scope="col" style="width: 90%">
+            <a href="{{ url_for('todo.edit', id=todo.id) }}" class="text-dark" style="text-decoration:none;">{{ todo.title }}</a>
+          </td>
         </tr>
         
       </tbody>

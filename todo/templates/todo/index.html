@@ -4,26 +4,27 @@
 
 {% block add %}{{ super() }}{% endblock %}
 
-  {% block content %}
-    <div class="mt-5 mx-5 table-responsive">
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th scope="col" style="width: 10%;">ID</th>
-            <th scope="col" style="width: 90%;">Title</th>
-          </tr>
-        </thead>
-        <tbody>
-        {% for todo in todos %}
-        <!-- コンテンツ入力用 -->
-          <tr>
-            <td scope="col" style="width: 10%" id="{{ todo.id }}"><a href="{{ url_for('todo.edit', id=post['id']) }}">{{ todo.id }}</a></td>
-            <td scope="col" style="width: 90%">{{ todo.title }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-
-    </div>
-  {% endblock %}
+{% block content %}
+  <div class="mt-5 mx-5 table-responsive">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th scope="col" style="width: 10%;">ID</th>
+          <th scope="col" style="width: 90%;">Title</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for todo in todos %}
+      <!-- コンテンツ入力用 -->
+        <tr>
+          <td scope="col" style="width: 10%" id="{{ todo.id }}">{{ todo.id }}</td>
+          <td scope="col" style="width: 90%">
+            <a href="{{ url_for('todo.edit', id=todo.id) }}" class="text-dark" style="text-decoration:none;">{{ todo.title }}</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}
 
