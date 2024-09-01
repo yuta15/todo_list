@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block header %}{{ super() }}{% endblock %}
+
+{% block content %}
+  <div class="mt-5 mx-5">
+    <form method="post">
+        <p>以下TODOが削除されます。よろしいでしょうか。</p>
+        <div class="mb-3">
+            <p class="mb-0">Title</p>
+            <p>{{ todo.title }}</p>
+        </div>
+        <div class="mb-3">
+            <p class="mb-0">content</p>
+            <p>{{ todo.body }}</p>
+        </div>
+        <div class="mb-3">
+            <p class="mb-0">End Time</p>
+            <p>{{ todo.end_time }}</p>
+        </div>
+        <div class="text-center">
+            <input type="hidden" name="id" value="{{ todo.id }}">
+            <input type="submit"  value="Delete" class="btn btn-danger mt-5 shadow-sm" style="width:10rem">
+            <a href="{{ url_for('todo.index') }}" class="btn btn-secondary mt-5 shadow-sm" style="width:10rem" id="Cancel">Cancel</a>
+        </div>
+    </form>
+  </div>
+
+
+{% endblock %}

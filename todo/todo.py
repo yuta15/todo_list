@@ -74,7 +74,6 @@ def edit(id):
         title = request.form['title']
         body = request.form['body']
         end_time = datetime.fromisoformat(request.form['end_time'])
-        is_state = request.form['is_state']
         if 'is_state' in request.form.keys():
             is_state = int(True)
         else:
@@ -92,44 +91,32 @@ def edit(id):
             flash(error)
         else:
             db = get_db()
-            """
-            test
-            """
-            print(title,body,end_time,is_state,id)
-            """
-            test
-            """
             db.execute( 
                 'UPDATE todo SET title = ?, body = ?, end_time = ?, is_state = ? WHERE id = ?;', 
                 (title, body, end_time, is_state, id)
             )
-            """
-            test
-            """
-            todos = []
-            for todo in db.execute('SELECT * FROM todo WHERE is_state = 0;').fetchall():
-                todos.append(dict(todo))
-            print(todos)
-            """
-            TEST
-            """
+            db.commit()
         return redirect(url_for('todo.index'))
 
     return render_template('todo/edit.html', todo=todo)
 
 
-@bp.route('/delete', methods=('POST',))
+@bp.route('/<int:id>/delete', methods=('GET', 'POST',))
 def delete(id):
     """
     タスクを削除する。
     """
     db = get_db()
-    db.execute(
-        'DELETE FROM todo WHERE id = ?',(id)
-    )
-    db.commit()
-
-    return redirect(url_for('todo.index'))
+    todo = db.execute('SELECT * FROM todo WHERE id = ?', (id,)).fetchone()
+    if request.method == 'POST':
+        db.execute(
+            'DELETE FROM todo WHERE id = ?;',(int(id),)
+        )
+        db.commit()
+        
+        return redirect(url_for('todo.index'))
+    
+    return render_template('todo/delete.html', todo=todo)
 
 
 @bp.route('/complete')
@@ -143,12 +130,3 @@ def complete():
         todos.append(dict(todo))
 
     return render_template('todo/complete.html', todos=todos)
-
-
-@bp.route('/test', methods=['GET', 'POST'])
-def test():
-    if request.method == 'POST':
-        is_state = request.form['is_state']
-        return is_state
-
-    return render_template('todo/test.html')

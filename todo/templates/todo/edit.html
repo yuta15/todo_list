@@ -23,11 +23,10 @@
         </div>
         <div class="text-center">
             <input type="submit"  value="Change" class="btn btn-primary mt-5 shadow-sm" style="width:10rem">
-            <a href="{{ url_for('todo.delete', id=todo.id) }}" class="btn btn-danger mt-5 shadow-sm" style="width:10rem">Delete</a>
+            <a href="{{ url_for('todo.delete', id=todo['id']) }}" class="btn btn-danger mt-5 shadow-sm" style="width:10rem" id="delete">Delete</a>
         </div>
     </form>
   </div>
-
 
 
 {% endblock %}
