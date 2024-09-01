@@ -1,0 +1,12 @@
+services:
+  app:
+    image: todo
+    container_name: todo
+    restart: always
+    environment:
+      - ENV=Dev
+    ports:
+      - 80:5000
+    volumes:
+      - .:/app
+    command: python3 -m flask --app todo/ run --debug --host=0.0.0.0

@@ -1,3 +1,4 @@
+from datetime import datetime
 import sqlite3
 
 import click
@@ -27,8 +28,8 @@ def init_db():
     with current_app.open_resource('schema.sql', mode='r') as f:
         db.executescript(f.read())
         db.commit()
-        
-        
+
+
 @click.command('init-db')
 def init_db_command():
     init_db()

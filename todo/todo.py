@@ -16,19 +16,11 @@ from todo.db import get_db
 bp = Blueprint('todo', __name__)
 
 
-def get_todo(id):
-    db = get_db()
-    todo = get_db().execute(
-        'SELECT * FROM todo WHERE id = ?;',(id)
-    ).fetchone()
-    if todo is None:
-        abort(404, f"Todo is Not Exists id:{id}")
-
-    return dict(todo)
-
-
 @bp.route('/')
 def index():
+    """
+    未完了のタスク一覧を表示
+    """
     db = get_db()
     todos = []
     for todo in db.execute('SELECT * FROM todo WHERE is_state = 0;').fetchall():
@@ -39,10 +31,13 @@ def index():
 
 @bp.route('/create', methods=('GET', 'POST'))
 def create():
+    """
+    新規タスクを作成する。
+    """
     if request.method == 'POST':
         title = request.form['title']
         body = request.form['body']
-        end_time = request.form['end_time']
+        end_time = datetime.fromisoformat(request.form['end_time'])
         error = None
 
         if not title:
@@ -59,7 +54,7 @@ def create():
             db.execute(
                 'INSERT INTO todo (title, body, end_time)'
                 ' VALUES (?, ?, ?);',
-                (title, body, datetime(end_time))
+                (title, body, end_time)
             )
             db.commit()
             return redirect(url_for('todo.index'))
@@ -69,15 +64,23 @@ def create():
 
 @bp.route('/<int:id>/edit', methods=('GET', 'POST'))
 def edit(id):
+    """
+    特定のタスクを変更する。
+    """
     db = get_db()
     todo = db.execute('SELECT * FROM todo WHERE id = ?', (id,)).fetchone()
 
     if request.method == 'POST':
         title = request.form['title']
         body = request.form['body']
-        end_time = datetime(request.form['end_time'])
+        end_time = datetime.fromisoformat(request.form['end_time'])
+        is_state = request.form['is_state']
+        if 'is_state' in request.form.keys():
+            is_state = int(True)
+        else:
+            is_state = int(False)
         error = None
-
+        
         if not title:
             error = 'Title is required.'
         elif not body:
@@ -89,10 +92,27 @@ def edit(id):
             flash(error)
         else:
             db = get_db()
-            db.execute(
-                'UPDATE todo SET title = ?, body = ?, end_time = ? WHERE id = ?;', 
-                (title, body, end_time, id)
+            """
+            test
+            """
+            print(title,body,end_time,is_state,id)
+            """
+            test
+            """
+            db.execute( 
+                'UPDATE todo SET title = ?, body = ?, end_time = ?, is_state = ? WHERE id = ?;', 
+                (title, body, end_time, is_state, id)
             )
+            """
+            test
+            """
+            todos = []
+            for todo in db.execute('SELECT * FROM todo WHERE is_state = 0;').fetchall():
+                todos.append(dict(todo))
+            print(todos)
+            """
+            TEST
+            """
         return redirect(url_for('todo.index'))
 
     return render_template('todo/edit.html', todo=todo)
@@ -100,6 +120,9 @@ def edit(id):
 
 @bp.route('/delete', methods=('POST',))
 def delete(id):
+    """
+    タスクを削除する。
+    """
     db = get_db()
     db.execute(
         'DELETE FROM todo WHERE id = ?',(id)
@@ -111,9 +134,21 @@ def delete(id):
 
 @bp.route('/complete')
 def complete():
+    """
+    完了済みタスク一覧を表示する。
+    """
     db = get_db()
     todos = []
     for todo in db.execute('SELECT * FROM todo WHERE is_state = 1;').fetchall():
         todos.append(dict(todo))
 
     return render_template('todo/complete.html', todos=todos)
+
+
+@bp.route('/test', methods=['GET', 'POST'])
+def test():
+    if request.method == 'POST':
+        is_state = request.form['is_state']
+        return is_state
+
+    return render_template('todo/test.html')

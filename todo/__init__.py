@@ -4,6 +4,10 @@ from flask import Flask
 
 
 def create_app(test_config=None):
+    """
+    test_config
+    
+    """
     app = Flask(__name__)
     app.config.from_mapping(
         SECURITY_KEY = 'dev',
