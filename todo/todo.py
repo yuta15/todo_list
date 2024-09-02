@@ -20,6 +20,7 @@ bp = Blueprint('todo', __name__)
 def index():
     """
     未完了のタスク一覧を表示
+    
     """
     db = get_db()
     todos = []
@@ -33,6 +34,7 @@ def index():
 def create():
     """
     新規タスクを作成する。
+    
     """
     if request.method == 'POST':
         title = request.form['title']
@@ -65,7 +67,9 @@ def create():
 @bp.route('/<int:id>/edit', methods=('GET', 'POST'))
 def edit(id):
     """
-    特定のタスクを変更する。
+    特定のTODOを変更する。
+    arg:
+        id:TODOのID
     """
     db = get_db()
     todo = db.execute('SELECT * FROM todo WHERE id = ?', (id,)).fetchone()
@@ -105,6 +109,8 @@ def edit(id):
 def delete(id):
     """
     タスクを削除する。
+    arg:
+        id:TODOのID
     """
     db = get_db()
     todo = db.execute('SELECT * FROM todo WHERE id = ?', (id,)).fetchone()
