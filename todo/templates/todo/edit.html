@@ -19,7 +19,11 @@
         </div>
         <div class="mb-3">
             <label name="endtime" class="form-label">Complete</label>
-            <input type="checkbox" id="is_state" class="form-check-input form-control shadow-sm" name="is_state">
+            {% if todo['is_state'] %}
+                <input type="checkbox" id="is_state" class="form-check-input form-control shadow-sm" name="is_state" checked>
+            {% else %}
+                <input type="checkbox" id="is_state" class="form-check-input form-control shadow-sm" name="is_state">
+            {% endif %}
         </div>
         <div class="text-center">
             <input type="submit"  value="Change" class="btn btn-primary mt-5 shadow-sm" style="width:10rem">
