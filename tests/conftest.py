@@ -6,8 +6,8 @@ from todo import create_app
 from todo.db import get_db, init_db
 
 
-with open(os.path.join(os.path.dirname(__file__), 'data.sql'), 'rb') as f:
-    _data_sql = f.read().decode('utf8')
+with open(os.path.join(os.path.dirname(__file__), 'data.sql'), 'r') as f:
+    _data_sql = f.read()
     
 
 @pytest.fixture
@@ -21,11 +21,12 @@ def app():
     
     with app.app_context():
         init_db()
-        get_db.executescript(_data_sql)
+        db = get_db()
+        db.executescript(_data_sql)
     
     yield app
     
-    os.clone(db_fd)
+    os.close(db_fd)
     os.unlink(db_path)
 
 

@@ -59,9 +59,9 @@ def create():
                 (title, body, end_time)
             )
             db.commit()
-            return redirect(url_for('todo.index'))
+            return redirect(url_for('todo.index')),200
 
-    return render_template('todo/create.html')
+    return render_template('todo/create.html'),200
 
 
 @bp.route('/<int:id>/edit', methods=('GET', 'POST'))
