@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='todo',
-    version='1.0.0',
+    version='1.1.0',
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
@@ -15,6 +15,8 @@ setup(
         'MarkupSafe==2.1.5',
         'Werkzeug==3.0.4',
         'setuptools==59.6.0',
-        'SQLAlchemy==2.0.32'
+        'SQLAlchemy==2.0.32',
+        'pytest==8.3.2',
+        'coverage==7.6.1'
     ]
 )

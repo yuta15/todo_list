@@ -1,4 +1,5 @@
 from datetime import datetime
+import sqlite3
 
 from flask import g
 from flask import request
@@ -13,7 +14,30 @@ from werkzeug.exceptions import abort
 from todo.db import get_db
 
 
+# このファイルはTODO部分を作成するためのファイルです。
+# BluePrintを使用して作成しており、__init__.pyにて読み込むことで使用しています。
+
 bp = Blueprint('todo', __name__)
+
+
+def validate_form(title=None, body=None, end_time=None, is_completed=None):
+    """
+    formに入力されたデータが正しいデータ形式か確認する。
+    title:str
+    body:str
+    end_time:str
+    is_completed:int
+    """
+    form_input = {
+        'title': title,
+        'body': body,
+        'end_time': datetime.fromisoformat(end_time),
+        'is_completed': is_completed,
+        'form_error': None
+    }
+    if not isinstance(form_input['title'], str) or not isinstance(form_input['body'], str) or not isinstance(form_input['end_time'], datetime):
+        form_input['form_error'] = 'Form Parmeter is Required'
+    return form_input
 
 
 @bp.route('/')
@@ -24,9 +48,8 @@ def index():
     """
     db = get_db()
     todos = []
-    for todo in db.execute('SELECT * FROM todo WHERE is_state = 0;').fetchall():
+    for todo in db.execute('SELECT * FROM todo WHERE is_completed = 0;').fetchall():
         todos.append(dict(todo))
-
     return render_template('todo/index.html', todos=todos)
 
 
@@ -37,31 +60,28 @@ def create():
     
     """
     if request.method == 'POST':
-        title = request.form['title']
-        body = request.form['body']
-        end_time = datetime.fromisoformat(request.form['end_time'])
-        error = None
-
-        if not title:
-            error = 'Title is required.'
-        elif not body:
-            error = 'Body is required.'
-        elif not end_time:
-            error = 'Endtime is required.'
-
-        if error is not None:
-            flash(error)
+        form_params = validate_form(
+            title=request.form['title'],
+            body=request.form['body'],
+            end_time=request.form['end_time'],
+            )
+        if form_params['form_error'] is not None:
+            abort(400)
         else:
             db = get_db()
-            db.execute(
-                'INSERT INTO todo (title, body, end_time)'
-                ' VALUES (?, ?, ?);',
-                (title, body, end_time)
-            )
-            db.commit()
-            return redirect(url_for('todo.index'))
-
-    return render_template('todo/create.html')
+            try:
+                db.execute(
+                    'INSERT INTO todo (title, body, end_time)'
+                    ' VALUES (?, ?, ?);',
+                    (form_params['title'], form_params['body'], form_params['end_time'])
+                )
+                db.commit()
+            except (sqlite3.DataError, sqlite3.OperationalError, sqlite3.ProgrammingError) as e:
+                flash(e)
+                abort(400)
+            else: 
+                return redirect(url_for('todo.index'),  code=303)
+    return render_template('todo/create.html'),200
 
 
 @bp.route('/<int:id>/edit', methods=('GET', 'POST'))
@@ -73,35 +93,29 @@ def edit(id):
     """
     db = get_db()
     todo = db.execute('SELECT * FROM todo WHERE id = ?', (id,)).fetchone()
-
     if request.method == 'POST':
-        title = request.form['title']
-        body = request.form['body']
-        end_time = datetime.fromisoformat(request.form['end_time'])
-        if 'is_state' in request.form.keys():
-            is_state = int(True)
-        else:
-            is_state = int(False)
-        error = None
-        
-        if not title:
-            error = 'Title is required.'
-        elif not body:
-            error = 'Body is required.'
-        elif not end_time:
-            error = 'EndTime is required.'
-
-        if error is not None:
-            flash(error)
-        else:
-            db = get_db()
-            db.execute( 
-                'UPDATE todo SET title = ?, body = ?, end_time = ?, is_state = ? WHERE id = ?;', 
-                (title, body, end_time, is_state, id)
+        form_params = validate_form(
+            title=request.form['title'],
+            body=request.form['body'],
+            end_time=request.form['end_time'],
+            is_completed=request.form['is_completed']
             )
-            db.commit()
-        return redirect(url_for('todo.index'))
-
+        if form_params['form_error'] is not None:
+            flash(form_params['form_error'])
+            abort(400)
+        else:
+            try:
+                db = get_db()
+                db.execute( 
+                    'UPDATE todo SET title = ?, body = ?, end_time = ?, is_completed = ? WHERE id = ?;', 
+                    (form_params['title'], form_params['body'], form_params['end_time'], form_params['is_completed'], id)
+                )
+                db.commit()
+            except (sqlite3.DataError, sqlite3.OperationalError, sqlite3.ProgrammingError) as e:
+                flash(e)
+                abort(400)
+            else:
+                return redirect(url_for('todo.index'), 303)
     return render_template('todo/edit.html', todo=todo)
 
 
@@ -113,16 +127,21 @@ def delete(id):
         id:TODOのID
     """
     db = get_db()
-    todo = db.execute('SELECT * FROM todo WHERE id = ?', (id,)).fetchone()
+    delete_todo = db.execute('SELECT * FROM todo WHERE id = ?', (id,)).fetchone()
+    if delete_todo is None:
+        abort(400)
     if request.method == 'POST':
-        db.execute(
-            'DELETE FROM todo WHERE id = ?;',(int(id),)
-        )
-        db.commit()
-        
-        return redirect(url_for('todo.index'))
-    
-    return render_template('todo/delete.html', todo=todo)
+        try:
+            db.execute(
+                'DELETE FROM todo WHERE id = ?;',(id,)
+            )
+            db.commit()
+        except (sqlite3.DataError, sqlite3.OperationalError, sqlite3.ProgrammingError) as e:
+            flash(e)
+            return redirect(url_for('/'))
+        else:
+            return redirect(url_for('todo.index'),303)
+    return render_template('todo/delete.html', todo=delete_todo)
 
 
 @bp.route('/complete')
@@ -132,7 +151,6 @@ def complete():
     """
     db = get_db()
     todos = []
-    for todo in db.execute('SELECT * FROM todo WHERE is_state = 1;').fetchall():
+    for todo in db.execute('SELECT * FROM todo WHERE is_completed = 1;').fetchall():
         todos.append(dict(todo))
-
     return render_template('todo/complete.html', todos=todos)
