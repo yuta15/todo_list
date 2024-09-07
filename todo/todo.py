@@ -20,7 +20,7 @@ from todo.db import get_db
 bp = Blueprint('todo', __name__)
 
 
-def validate_form_data(title=None, body=None, end_time=None, is_completed=None):
+def validate_form(title=None, body=None, end_time=None, is_completed=None):
     """
     formに入力されたデータが正しいデータ形式か確認する。
     title:str
@@ -60,7 +60,7 @@ def create():
     
     """
     if request.method == 'POST':
-        form_params = validate_form_data(
+        form_params = validate_form(
             title=request.form['title'],
             body=request.form['body'],
             end_time=request.form['end_time'],
@@ -94,7 +94,7 @@ def edit(id):
     db = get_db()
     todo = db.execute('SELECT * FROM todo WHERE id = ?', (id,)).fetchone()
     if request.method == 'POST':
-        form_params = validate_form_data(
+        form_params = validate_form(
             title=request.form['title'],
             body=request.form['body'],
             end_time=request.form['end_time'],
