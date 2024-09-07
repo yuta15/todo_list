@@ -1,4 +1,5 @@
 from datetime import datetime
+import sqlite3
 
 from flask import g
 from flask import request
@@ -13,6 +14,9 @@ from werkzeug.exceptions import abort
 from todo.db import get_db
 
 
+# このファイルはTODO部分を作成するためのファイルです。
+# BluePrintを使用して作成しており、__init__.pyにて読み込むことで使用しています。
+
 bp = Blueprint('todo', __name__)
 
 
@@ -26,7 +30,6 @@ def index():
     todos = []
     for todo in db.execute('SELECT * FROM todo WHERE is_state = 0;').fetchall():
         todos.append(dict(todo))
-
     return render_template('todo/index.html', todos=todos)
 
 
@@ -41,14 +44,12 @@ def create():
         body = request.form['body']
         end_time = datetime.fromisoformat(request.form['end_time'])
         error = None
-
         if not title:
             error = 'Title is required.'
         elif not body:
             error = 'Body is required.'
         elif not end_time:
             error = 'Endtime is required.'
-
         if error is not None:
             flash(error)
         else:
@@ -59,8 +60,7 @@ def create():
                 (title, body, end_time)
             )
             db.commit()
-            return redirect(url_for('todo.index')),200
-
+            return redirect(url_for('todo.index'),  code=303)
     return render_template('todo/create.html'),200
 
 
@@ -73,7 +73,6 @@ def edit(id):
     """
     db = get_db()
     todo = db.execute('SELECT * FROM todo WHERE id = ?', (id,)).fetchone()
-
     if request.method == 'POST':
         title = request.form['title']
         body = request.form['body']
@@ -83,25 +82,29 @@ def edit(id):
         else:
             is_state = int(False)
         error = None
-        
         if not title:
             error = 'Title is required.'
         elif not body:
             error = 'Body is required.'
         elif not end_time:
             error = 'EndTime is required.'
-
         if error is not None:
             flash(error)
         else:
-            db = get_db()
-            db.execute( 
-                'UPDATE todo SET title = ?, body = ?, end_time = ?, is_state = ? WHERE id = ?;', 
-                (title, body, end_time, is_state, id)
-            )
-            db.commit()
+            try:
+                db = get_db()
+                db.execute( 
+                    'UPDATE todo SET title = ?, body = ?, end_time = ?, is_state = ? WHERE id = ?;', 
+                    (title, body, end_time, is_state, id)
+                )
+                db.commit()
+            except sqlite3.DataError as e:
+                flash(e)
+            except sqlite3.OperationalError as e:
+                flash(e)
+            except sqlite3.ProgrammingError as e:
+                flash(e)
         return redirect(url_for('todo.index'))
-
     return render_template('todo/edit.html', todo=todo)
 
 
@@ -119,9 +122,7 @@ def delete(id):
             'DELETE FROM todo WHERE id = ?;',(int(id),)
         )
         db.commit()
-        
         return redirect(url_for('todo.index'))
-    
     return render_template('todo/delete.html', todo=todo)
 
 

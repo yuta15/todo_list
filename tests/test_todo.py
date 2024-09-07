@@ -21,17 +21,23 @@ def test_create(client):
     # GET
     response = client.get('/create')
     assert b'<input type="submit" value="Register" class="btn btn-primary mt-5 shadow-sm" style="width:10rem">' in response.data
-    
-    # POST
-    data = [
-        {},
-        {},
-        {}
-    ]
-    response = client.post('/create', data={
-        'title': 'pytest',
-        'body': 'pytest',
-        'end_time': '2024-12-12T12:12'
-    })
     assert response.status_code == 200
     
+    # POST
+    post_datas = [
+        {'title': '303_test', 'body': '303_test', 'end_time': '2024-09-12T12:12'},
+        {'title': '400_test', 'end_time': '2024-09-12T12:12'},
+        {'title': 'AAAAAAAAA', 'body': 'AAAAAAAAA', 'end_time': '2024-09-12T12:12'},
+    ]
+    for post_data in post_datas:
+        response = client.post('/create', data=post_data)
+        if post_data['title'] is '303_test':
+            print(response)
+            assert response.status_code == 303
+            # assert len(response.history) == 1
+            # assert response.request.path == '/'
+
+        elif post_data['title'] is '400_test':
+            assert response.status_code == 400
+    
+
