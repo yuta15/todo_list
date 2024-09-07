@@ -26,7 +26,7 @@ INSERT INTO todo (
     end_time,
     title,
     body,
-    is_state
+    is_completed
 ) VALUES (
     datetime('2017-12-05 23:20'),
     'TEST-DATA3',

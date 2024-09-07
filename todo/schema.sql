@@ -6,5 +6,5 @@ CREATE TABLE todo(
     end_time DATETIME  NOT NULL,
     title TEXT NOT NULL,
     body TEXT NOT NULL,
-    is_state  BOOLEAN NOT NULL DEFAULT False
+    is_completed  BOOLEAN NOT NULL DEFAULT False
     );
