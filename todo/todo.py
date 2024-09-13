@@ -37,6 +37,10 @@ def validate_form(title=None, body=None, end_time=None, is_completed=None):
     }
     if not isinstance(form_input['title'], str) or not isinstance(form_input['body'], str) or not isinstance(form_input['end_time'], datetime):
         form_input['form_error'] = 'Form Parmeter is Required'
+    if is_completed is not None:
+        form_input['is_completed'] = int(True)
+    else:
+        form_input['is_completed'] = int(False)
     return form_input
 
 
@@ -94,12 +98,19 @@ def edit(id):
     db = get_db()
     todo = db.execute('SELECT * FROM todo WHERE id = ?', (id,)).fetchone()
     if request.method == 'POST':
-        form_params = validate_form(
-            title=request.form['title'],
-            body=request.form['body'],
-            end_time=request.form['end_time'],
-            is_completed=request.form['is_completed']
-            )
+        if 'is_completed' in request.form.keys():
+            form_params = validate_form(
+                title=request.form['title'],
+                body=request.form['body'],
+                end_time=request.form['end_time'],
+                is_completed=request.form['is_completed']
+                )
+        else:
+            form_params = validate_form(
+                title=request.form['title'],
+                body=request.form['body'],
+                end_time=request.form['end_time'],
+                )
         if form_params['form_error'] is not None:
             flash(form_params['form_error'])
             abort(400)
