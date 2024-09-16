@@ -13,14 +13,13 @@ from werkzeug.exceptions import abort
 
 from todo.db import get_db
 
-
 # このファイルはTODO部分を作成するためのファイルです。
 # BluePrintを使用して作成しており、__init__.pyにて読み込むことで使用しています。
 
 bp = Blueprint('todo', __name__)
 
 
-def validate_form(title=None, body=None, end_time=None, is_completed=None):
+def varificate_form(**unverified_form):
     """
     formに入力されたデータが正しいデータ形式か確認する。
     title:str
@@ -28,16 +27,33 @@ def validate_form(title=None, body=None, end_time=None, is_completed=None):
     end_time:str
     is_completed:int
     """
-    form_input = {
-        'title': title,
-        'body': body,
-        'end_time': datetime.fromisoformat(end_time),
-        'is_completed': is_completed,
-        'form_error': None
+    verified_form = {
+            'title': None,
+            'body': None,
+            'end_time': None,
+            'is_completed': None,
+            'form_error': None
     }
-    if not isinstance(form_input['title'], str) or not isinstance(form_input['body'], str) or not isinstance(form_input['end_time'], datetime):
-        form_input['form_error'] = 'Form Parmeter is Required'
-    return form_input
+    try:
+        verified_form['title'] = unverified_form.get('title')
+        verified_form['body'] = unverified_form.get('body')
+        verified_form['end_time'] = datetime.fromisoformat(unverified_form.get('end_time'))
+        verified_form['is_completed'] = 1 if unverified_form.get('is_completed') is not None else 0
+
+        if verified_form['title'] is None or verified_form['body'] is None or verified_form['end_time'] is None:
+            verified_form['form_error'] = 'Title, body, end_time is required'
+            return verified_form
+
+        elif not isinstance(verified_form['title'], str) or not isinstance(verified_form['body'], str) or not isinstance(verified_form['end_time'], datetime):
+            verified_form['form_error'] = 'Form Parmeter is Required'
+            return verified_form
+
+    except:
+        verified_form['form_error'] = 'Unknown Error'
+        return verified_form
+
+    else:
+        return verified_form
 
 
 @bp.route('/')
@@ -60,12 +76,8 @@ def create():
     
     """
     if request.method == 'POST':
-        form_params = validate_form(
-            title=request.form['title'],
-            body=request.form['body'],
-            end_time=request.form['end_time'],
-            )
-        if form_params['form_error'] is not None:
+        verified_form = varificate_form(**dict(request.form))
+        if verified_form['form_error'] is not None:
             abort(400)
         else:
             db = get_db()
@@ -73,12 +85,12 @@ def create():
                 db.execute(
                     'INSERT INTO todo (title, body, end_time)'
                     ' VALUES (?, ?, ?);',
-                    (form_params['title'], form_params['body'], form_params['end_time'])
+                    (verified_form['title'], verified_form['body'], verified_form['end_time'])
                 )
                 db.commit()
             except (sqlite3.DataError, sqlite3.OperationalError, sqlite3.ProgrammingError) as e:
                 flash(e)
-                abort(400)
+                abort(500)
             else: 
                 return redirect(url_for('todo.index'),  code=303)
     return render_template('todo/create.html'),200
@@ -94,21 +106,16 @@ def edit(id):
     db = get_db()
     todo = db.execute('SELECT * FROM todo WHERE id = ?', (id,)).fetchone()
     if request.method == 'POST':
-        form_params = validate_form(
-            title=request.form['title'],
-            body=request.form['body'],
-            end_time=request.form['end_time'],
-            is_completed=request.form['is_completed']
-            )
-        if form_params['form_error'] is not None:
-            flash(form_params['form_error'])
+        verified_form = varificate_form(**dict(request.form))
+        print(verified_form)
+        if verified_form['form_error'] is not None:
             abort(400)
         else:
             try:
                 db = get_db()
                 db.execute( 
                     'UPDATE todo SET title = ?, body = ?, end_time = ?, is_completed = ? WHERE id = ?;', 
-                    (form_params['title'], form_params['body'], form_params['end_time'], form_params['is_completed'], id)
+                    (verified_form['title'], verified_form['body'], verified_form['end_time'], verified_form['is_completed'], id)
                 )
                 db.commit()
             except (sqlite3.DataError, sqlite3.OperationalError, sqlite3.ProgrammingError) as e:

@@ -26,13 +26,14 @@ def test_create(client):
         {'title': 'accurate_data', 'body': '303_test', 'end_time': '2024-09-12T12:12'},
         {'title': 'shortage_body', 'end_time': '2024-09-12T12:12'},
         {'title': 'unowned_body', 'body': None, 'end_time': '2024-09-12T12:12'},
+        {'title': 'unowned_end_time', 'body': None},
     ]
     for post_data in post_datas:
         response = client.post('/create', data=post_data)
         if post_data['title'] in ('accurate_data'):
             # TODOの作成処理
             assert response.status_code == 303
-        elif post_data['title'] in ('shortage_body', 'unowned_body'):
+        elif post_data['title'] in ('shortage_body', 'unowned_body', 'unowned_end_time'):
             # 不足したデータ、誤ったデータの処理
             assert response.status_code == 400
 
@@ -48,11 +49,12 @@ def test_edit(client):
         {'title': 'shortage_endtime', 'body': '400_test'}
     ]
     for post_data in post_datas:
-        if post_data['title'] is '303_test':
-            # detaの変更、complete状態の変更処理
+        if post_data['body'] is '303_test':
+            # dataの変更、complete状態の変更処理
             response = client.post('/1/edit', data=post_data)
             assert response.status_code == 303
-        else:
+            
+        elif post_data['body'] is '400_test':
             # 不足したデータのPOST処理
             response = client.post('/1/edit', data=post_data)
             assert response.status_code == 400
